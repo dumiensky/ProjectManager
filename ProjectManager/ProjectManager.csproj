@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="AspNetCore.Identity.Mongo" Version="8.3.3" />
+      <PackageReference Include="MongoDB.Wrapper" Version="0.4.2" />
       <PackageReference Include="MudBlazor" Version="6.20.0" />
     </ItemGroup>
 
