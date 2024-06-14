@@ -1,0 +1,60 @@
+@using System.Web
+@using Microsoft.AspNetCore.Identity
+@using ProjectManager.Models.Auth
+@using ProjectManager.Models.Statics
+@using Routes = ProjectManager.Models.Statics.Routes
+
+@inject SignInManager<User> _signInManager
+@inject NavigationManager _nav
+@inject ISnackbar _snack
+
+<div class="mx-auto my-10 px-10" style="max-width: 500px;">
+	<MudText Typo="Typo.h3" Color="Color.Primary">
+		Project Manager
+	</MudText>
+	<MudText Typo="Typo.h6" Class="mb-3">
+		Zaloguj się, aby używać aplikacji
+	</MudText>
+
+	<MudTextField @bind-Value="_username" Variant="Variant.Outlined" Label="Użytkownik" Immediate />
+	<MudTextField @bind-Value="_pw" Variant="Variant.Outlined" Label="Hasło" Immediate InputType="InputType.Password" />
+
+	<MudButton
+		FullWidth="true"
+		Class="my-3"
+		Color="Color.Success"
+		Variant="Variant.Filled"
+		EndIcon="@Icons.Material.Filled.ChevronRight"
+		Disabled="string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_pw)"
+		OnClick="Submit">
+		Zaloguj
+	</MudButton>
+</div>
+
+@code {
+	string? _username, _pw;
+
+	async Task Submit()
+	{
+		if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_pw))
+			return;
+		
+		var user = await _signInManager.UserManager.FindByNameAsync(_username);
+		if (user is not null)
+		{
+			var result = await _signInManager.CheckPasswordSignInAsync(user, _pw, lockoutOnFailure: false);
+
+			if(result.Succeeded)
+			{
+				var token = await _signInManager.UserManager.GenerateUserTokenAsync(user, AuthConsts.Provider, AuthConsts.Name);
+				_nav.NavigateTo(
+					$"{Routes.Auth.Login}?login={_username}&token={HttpUtility.UrlEncode(token)}",
+					forceLoad: true);
+				return;
+			}
+		}
+
+		_snack.Add("Niepowodzenie", Severity.Error);
+	}
+
+}
