@@ -17,7 +17,7 @@
 				<MudText Typo="Typo.caption">Projekt zaliczeniowy przedmiotu "Projektowanie aplikacji webowych"</MudText>
 			</div>
 			<MudSpacer />
-			<MudToggleIconButton bind-Toggled="_isDarkMode" Icon="@Icons.Material.Filled.LightMode" ToggledIcon="@Icons.Material.Filled.DarkMode" />
+			<MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Filled.DarkMode" ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="Color.Warning" />
 		</MudAppBar>
 		<MudDrawer @bind-Open="@_drawerOpen">
 			<NavMenu />
