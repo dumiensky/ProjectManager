@@ -7,4 +7,6 @@ public class UserContext : Entity
 	public Guid? ProjectId { get; set; }
 	
 	public bool DarkMode { get; set; }
+	
+	public required string UserId { get; set; }
 }

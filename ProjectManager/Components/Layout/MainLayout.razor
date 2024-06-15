@@ -1,5 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Extensions
 @using ProjectManager.Models.Statics
 @inherits LayoutComponentBase
 @inject IMongoDb _mongoDb
@@ -17,7 +19,7 @@
 				<MudText Typo="Typo.caption">Projekt zaliczeniowy przedmiotu "Projektowanie aplikacji webowych"</MudText>
 			</div>
 			<MudSpacer />
-			<MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Filled.DarkMode" ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="Color.Warning" />
+			<MudToggleIconButton Toggled="_isDarkMode" ToggledChanged="SetIsDarkMode" Icon="@Icons.Material.Filled.DarkMode" ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="Color.Warning" />
 		</MudAppBar>
 		<MudDrawer @bind-Open="@_drawerOpen">
 			<NavMenu />
@@ -48,11 +50,34 @@
 	[CascadingParameter]
 	public required Task<AuthenticationState> AuthState { get; set; }
 	
-	bool _drawerOpen = true, _isDarkMode = false;
+	bool _drawerOpen = true, _isDarkMode;
+	UserContext? _userCtx;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var user = (await AuthState).User;
+		if (user.GetId() is { } id)
+		{
+			_userCtx = await _mongoDb.FirstOrDefault<UserContext>(_ => _.UserId == id) 
+						?? new()
+						{
+							UserId = id
+						};
+			_isDarkMode = _userCtx.DarkMode;
+		}
+	}
 
 	void DrawerToggle()
 	{
 		_drawerOpen = !_drawerOpen;
 	}
 
+	async Task SetIsDarkMode(bool value)
+	{
+		if (_userCtx is null)
+			return;
+		
+		_userCtx.DarkMode = _isDarkMode = value;
+		await _mongoDb.Replace(_userCtx);
+	}
 }
