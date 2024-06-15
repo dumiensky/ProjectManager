@@ -1,7 +1,40 @@
-﻿@page "/"
+﻿@attribute [Route(Routes.Index)]
+@using ProjectManager.Models.Dto
+@using Routes = ProjectManager.Models.Statics.Routes
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudStack Row AlignItems="AlignItems.Start">
+	<div style="width: 100%">
+		@if (Context is null)
+		{
+			<MudAlert Severity="Severity.Info">
+				Nie załadowano żadnego projektu. Możesz utworzyć nowy projekt przy pomocy przycisku 'Stwórz'.
+			</MudAlert>
+		}
+		else
+		{
+			<MudStack Row AlignItems="AlignItems.Start">
+				<div style="width: 100%">
+					<MudText Typo="Typo.h2">
+						@Context.Project.Name
+					</MudText>
+					<MudText Typo="Typo.caption">
+						@Context.Project.Description
+					</MudText>
+				</div>
+				<MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Href="@Routes.Projects.GetEdit(Context.Project.Id)">
+					Edytuj
+				</MudButton>
+			</MudStack>
+		}
+	</div>
+	<MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle" Variant="Variant.Filled" Href="@Routes.Projects.Add">
+		Stwórz
+	</MudButton>
+</MudStack>
 
-Welcome to your new app.
+@code {
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
+}

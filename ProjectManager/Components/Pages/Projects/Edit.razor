@@ -1,0 +1,81 @@
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Statics
+@using ProjectManager.Services.Interfaces
+@attribute [Route(Routes.Projects.Edit)]
+@inject IMongoDb _mongo
+@inject ISnackbar _snack
+@inject NavigationManager _nav
+@inject IProjectContextHooks _projectContextHooks
+
+<MudText Typo="Typo.h2">
+	Edycja projektu
+</MudText>
+
+@if (_project is null)
+{
+	<MudProgressCircular Indeterminate />
+}
+else
+{
+	<MudPaper Class="my-3 pa-3">
+		<MudTextField @bind-Value="_project.Name" Label="Nazwa" Immediate />
+		<MudTextField @bind-Value="_project.Description" Label="Opis" Immediate />
+	
+		<MudButton 
+			Variant="Variant.Filled" 
+			Color="Color.Success"
+			Class="my-3"
+			FullWidth 
+			Disabled="string.IsNullOrEmpty(_project.Name) || string.IsNullOrEmpty(_project.Description)"
+			OnClick="Submit">
+			Edytuj
+		</MudButton>
+
+		<MudButton
+			Variant="Variant.Text"
+			Color="Color.Error"
+			Class="my-3"
+			OnClick="Delete">
+			Usuń ten projekt
+		</MudButton>
+	</MudPaper>
+}
+
+@code {
+	[Parameter]
+	public Guid ProjectId { get; set; }
+	
+	Project? _project;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_project = await _mongo.Get<Project>(ProjectId);
+	}
+
+	async Task Submit()
+	{
+		if (string.IsNullOrEmpty(_project?.Name) || string.IsNullOrEmpty(_project?.Description))
+			return;
+
+		await _mongo.Replace(_project);
+		_snack.Add("Zaktualizowano projekt", Severity.Success);
+		
+		_projectContextHooks.SetCurrentProject(_project.Id);
+		
+		_nav.NavigateTo(Routes.Index);
+	}
+
+	async Task Delete()
+	{
+		if (_project is null)
+			return;
+		
+		await _mongo.Delete<Project>(_project.Id);
+		_snack.Add("Usunięto projekt", Severity.Success);
+		
+		_projectContextHooks.SetCurrentProject(Guid.Empty);
+		_nav.NavigateTo(Routes.Index);
+	}
+
+}

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using ProjectManager.Models.Auth;
 
-namespace ProjectManager.Services.Provider;
+namespace ProjectManager.Services.Providers;
 
 public class AuthTokenProvider(
 	IDataProtectionProvider dataProtectionProvider,

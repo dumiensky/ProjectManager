@@ -1,0 +1,52 @@
+
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Statics
+@using ProjectManager.Services.Interfaces
+@attribute [Route(Routes.Projects.Add)]
+@inject IMongoDb _mongo
+@inject ISnackbar _snack
+@inject NavigationManager _nav
+@inject IProjectContextHooks _projectContextHooks
+
+<MudText Typo="Typo.h2">
+	Tworzenie nowego projektu
+</MudText>
+
+<MudPaper Class="my-3 pa-3">
+	<MudTextField @bind-Value="_name" Label="Nazwa" Immediate />
+	<MudTextField @bind-Value="_desc" Label="Opis" Immediate />
+	
+	<MudButton 
+		Variant="Variant.Filled" 
+		Color="Color.Success"
+		Class="my-3"
+		FullWidth 
+		Disabled="string.IsNullOrEmpty(_name) || string.IsNullOrEmpty(_desc)"
+		OnClick="Submit">
+		Stwórz
+	</MudButton>
+</MudPaper>
+
+@code {
+	string? _name, _desc;
+
+	async Task Submit()
+	{
+		if (string.IsNullOrEmpty(_name) || string.IsNullOrEmpty(_desc))
+			return;
+
+		var project = new Project
+		{
+			Name = _name,
+			Description = _desc
+		};
+		await _mongo.Add(project);
+		_snack.Add("Stworzono nowy projekt", Severity.Success);
+		
+		_projectContextHooks.SetCurrentProject(project.Id);
+		
+		_nav.NavigateTo(Routes.Index);
+	}
+
+}

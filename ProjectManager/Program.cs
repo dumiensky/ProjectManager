@@ -7,7 +7,9 @@ using ProjectManager.Components;
 using ProjectManager.Models.Auth;
 using ProjectManager.Models.Extensions;
 using ProjectManager.Models.Statics;
-using ProjectManager.Services.Provider;
+using ProjectManager.Services;
+using ProjectManager.Services.Interfaces;
+using ProjectManager.Services.Providers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,7 @@ builder.Services.AddIdentityMongoDbProvider<User, Role, Guid>(c =>
 	c.ConnectionString = $"{mongoDbSettings.ConnectionString}/{mongoDbSettings.DatabaseName}")
 	.AddTokenProvider<AuthTokenProvider>(AuthConsts.Provider);
 
+builder.Services.AddScoped<IProjectContextHooks, ProjectContextHooks>();
 builder.Services.AddSingleton<IMongoDb>(new MongoDb(mongoDbSettings));
 
 var app = builder.Build();

@@ -1,10 +1,14 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Dto
 @using ProjectManager.Models.Entities
 @using ProjectManager.Models.Extensions
 @using ProjectManager.Models.Statics
+@using ProjectManager.Services.Interfaces
 @inherits LayoutComponentBase
 @inject IMongoDb _mongoDb
+@inject IProjectContextHooks _projectContextHooks
+@implements IDisposable
 
 <MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="Theme.Default" />
 <MudDialogProvider />
@@ -28,9 +32,18 @@
 	<MudMainContent>
 		<AuthorizeView>
 			<Authorized>
-				<div class="pa-3">
-					@Body
-				</div>
+				@if (_projects is null)
+				{
+					<MudProgressLinear Indeterminate Class="my-5" />
+				}
+				else
+				{
+					<CascadingValue Value="_projectContext">
+						<div class="pa-3">
+							@Body
+						</div>
+					</CascadingValue>
+				}
 			</Authorized>
 			<NotAuthorized>
 				<LoginPage />
@@ -52,9 +65,13 @@
 	
 	bool _drawerOpen = true, _isDarkMode;
 	UserContext? _userCtx;
+	ProjectContext? _projectContext;
+	List<Project>? _projects;
 
 	protected override async Task OnInitializedAsync()
 	{
+		SetupHooks();
+		
 		var user = (await AuthState).User;
 		if (user.GetId() is { } id)
 		{
@@ -64,7 +81,43 @@
 							UserId = id
 						};
 			_isDarkMode = _userCtx.DarkMode;
+			var projects = await _mongoDb.Get<Project>();
+			
+			if (_userCtx.ProjectId.HasValue && 
+				projects.FirstOrDefault(_ => _.Id == _userCtx.ProjectId.Value) is {} currentProject)
+			{
+				_projectContext = new(currentProject);
+			}
+			else if (projects.Any())
+			{
+				_projectContext = new(projects.First());
+			}
+			_projects = projects;
 		}
+	}
+
+	void SetupHooks()
+	{
+		_projectContextHooks.OnCurrentProjectSet += ProjectContextHooksOnOnCurrentProjectSet;
+	}
+
+	async void ProjectContextHooksOnOnCurrentProjectSet(object? sender, Guid e)
+	{
+		_projects = await _mongoDb.Get<Project>();
+		if (_projects?.FirstOrDefault(_ => _.Id == e) is { } newProject)
+		{
+			_projectContext = new(newProject);
+			
+		}
+		else if (_projects?.Any() == true)
+		{
+			_projectContext = new(_projects.First());
+		}
+		else
+		{
+			_projectContext = null;
+		}
+		await InvokeAsync(StateHasChanged);
 	}
 
 	void DrawerToggle()
@@ -79,5 +132,10 @@
 		
 		_userCtx.DarkMode = _isDarkMode = value;
 		await _mongoDb.Replace(_userCtx);
+	}
+
+	void IDisposable.Dispose()
+	{
+		_projectContextHooks.OnCurrentProjectSet -= ProjectContextHooksOnOnCurrentProjectSet;
 	}
 }
