@@ -1,0 +1,22 @@
+@using ProjectManager.Models.Enums
+
+@switch (Value)
+{
+	case State.Pending:
+		<MudText Color="Color.Default">Oczekuje</MudText>
+		break;
+	case State.InProgress:
+		<MudText Color="Color.Info">W trakcie</MudText>
+		break;
+	case State.Done:
+		<MudText Color="Color.Success">Zrobione</MudText>
+		break;
+	default:
+		<MudText>Nieznany stan!</MudText>
+		break;
+}
+
+@code {
+	[Parameter, EditorRequired]
+	public State Value { get; set; }
+}

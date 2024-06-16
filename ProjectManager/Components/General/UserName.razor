@@ -1,0 +1,18 @@
+@using Microsoft.AspNetCore.Identity
+@using ProjectManager.Models.Auth
+@inject UserManager<User> _userManager
+
+<span>@_name</span>
+
+@code {
+	[Parameter, EditorRequired]
+	public Guid UserId { get; set; }
+
+	string? _name;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_name = (await _userManager.FindByIdAsync(UserId.ToString()))?.UserName;
+	}
+
+}

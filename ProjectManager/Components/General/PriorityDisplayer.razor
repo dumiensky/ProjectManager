@@ -1,0 +1,22 @@
+@using ProjectManager.Models.Enums
+
+@switch (Value)
+{
+	case Priority.Low:
+		<MudText Color="Color.Info">Niski</MudText>
+		break;
+	case Priority.Medium:
+		<MudText Color="Color.Warning">Średni</MudText>
+		break;
+	case Priority.High:
+		<MudText Color="Color.Info">Wysoki</MudText>
+		break;
+	default:
+		<MudText>Nieznany priorytet!</MudText>
+		break;
+}
+
+@code {
+	[Parameter, EditorRequired]
+	public Priority Value { get; set; }
+}

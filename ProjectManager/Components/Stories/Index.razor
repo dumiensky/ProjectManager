@@ -1,0 +1,99 @@
+@using MongoDB.Driver
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Dto
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Statics
+@using MongoDB.Driver.Linq
+@using ProjectManager.Components.General
+@attribute [Route(Routes.Stories.Index)]
+@inject NavigationManager _nav
+@inject IMongoDb _mongo
+
+@if (Context is not null)
+{
+	<MudStack Row AlignItems="AlignItems.Start">
+		<div style="width: 100%">
+			<MudText Typo="Typo.h2">
+				Historyjki
+			</MudText>
+			<MudText Typo="Typo.caption">
+				@Context.Project.Description
+			</MudText>
+		</div>
+		<MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle" Variant="Variant.Filled" Href="@Routes.Stories.Add">
+			Stwórz nową
+		</MudButton>
+	</MudStack>
+
+	<MudTable ServerData="ServerData">
+		<HeaderContent>
+			<MudTh>Nazwa</MudTh>
+			<MudTh>Priorytet</MudTh>
+			<MudTh>Stan</MudTh>
+			<MudTh>Właściciel</MudTh>
+			<MudTh></MudTh>
+		</HeaderContent>
+		<RowTemplate>
+			<MudTd>
+				@context.Name
+			</MudTd>
+			<MudTd>
+				<PriorityDisplayer Value="@context.Priority" />
+			</MudTd>
+			<MudTd>
+				<StateDisplayer Value="@context.State" />
+			</MudTd>
+			<MudTd>
+				@if (context.OwnerId.HasValue)
+				{
+					<UserName UserId="@context.OwnerId.Value" />
+				}
+			</MudTd>
+			<MudTd>
+				<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+					Przejdź
+				</MudButton>
+			</MudTd>
+		</RowTemplate>
+		<NoRecordsContent>
+			<MudAlert Severity="Severity.Info">
+				Brak historyjek
+			</MudAlert>
+		</NoRecordsContent>
+		<PagerContent>
+			<MudTablePager />
+		</PagerContent>
+	</MudTable>
+}
+
+@code {
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
+
+	protected override void OnInitialized()
+	{
+		if (Context is null)
+			_nav.NavigateTo(Routes.Index);
+	}
+
+	async Task<TableData<Story>> ServerData(TableState e)
+	{
+		var query = _mongo
+			.Query<Story>()
+			.Where(_ => _.ProjectId == Context!.Project.Id);
+
+		var totalCount = await query.CountAsync();
+		var page = await query
+			.OrderByDescending(_ => _.Added)
+			.Skip(e.Page * e.PageSize)
+			.Take(e.PageSize)
+			.ToListAsync();
+
+		return new()
+		{
+			Items = page,
+			TotalItems = totalCount
+		};
+	}
+
+}

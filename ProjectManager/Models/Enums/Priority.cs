@@ -6,5 +6,5 @@ public enum Priority
 {
 	Low,
 	Medium,
-	Hight
+	High
 }

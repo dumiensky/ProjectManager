@@ -1,3 +1,4 @@
+// ReSharper disable MemberHidesStaticFromOuterClass
 namespace ProjectManager.Models.Statics;
 
 public static class Routes
@@ -16,5 +17,12 @@ public static class Routes
 		public const string Index = "/projects";
 		public const string Add = Index + "/add";
 		public const string Edit = Index + "/edit";
+	}
+
+	public static class Stories
+	{
+		public const string Index = "/stories";
+		public const string Add = Index + "/add";
+		public const string Edit = Index + "/edit/{StoryId:guid}";
 	}
 }
