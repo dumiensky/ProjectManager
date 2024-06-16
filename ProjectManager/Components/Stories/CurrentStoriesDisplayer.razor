@@ -1,0 +1,70 @@
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Enums
+@inject IMongoDb _mongo
+
+<MudPaper Class="pa-3">
+	<MudGrid>
+		<MudItem xs="12" sm="6">
+			<MudText Typo="Typo.h3" Align="Align.Center">@_storiesPending</MudText>
+			<MudText Typo="Typo.body2" Align="Align.Center">Historyjki zaplanowane</MudText>
+		</MudItem>
+		<MudItem xs="12" sm="6">
+			<MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Info">@_storiesPending</MudText>
+			<MudText Typo="Typo.body2" Align="Align.Center">Historyjki w trakcie</MudText>
+		</MudItem>
+	</MudGrid>
+	<MudProgressLinear Color="Color.Info" Class="my-3" Min="0" Max="(_storiesPending ?? 0) + (_storiesInProgress ?? 0)" Value="_storiesInProgress ?? 0" />
+	<div class="my-3">
+		<MudText Typo="Typo.caption">Najnowsze historyjki:</MudText>
+		
+		<MudTable Hover Items="_stories?.OrderByDescending(_ => _.Added).Take(3)" Elevation="0">
+			<RowTemplate>
+				<MudTd>
+					@context.Added.ToLocalTime().ToString("g")
+				</MudTd>
+				<MudTd>
+					@context.Name
+				</MudTd>
+				<MudTd>
+					@context.Priority
+				</MudTd>
+				<MudTd>
+					<MudButton Size="Size.Small" Variant="Variant.Filled">
+						Pokaż
+					</MudButton>
+				</MudTd>
+			</RowTemplate>
+			<NoRecordsContent>
+				<MudAlert Severity="Severity.Success" Class="my-3">
+					Brak!
+				</MudAlert>
+			</NoRecordsContent>
+		</MudTable>
+		
+		<MudStack Row>
+			<MudButton FullWidth Color="Color.Info">
+				Zobacz wszystkie historyjki
+			</MudButton>
+			<MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle">
+				Stwórz
+			</MudButton>
+		</MudStack>
+	</div>
+</MudPaper>
+
+@code {
+	[Parameter, EditorRequired]
+	public Guid ProjectId { get; set; }
+
+	List<Story>? _stories;
+	
+	int? _storiesPending => _stories?.Count(_ => _.State == State.Pending);
+	int? _storiesInProgress => _stories?.Count(_ => _.State == State.InProgress);
+
+	protected override async Task OnInitializedAsync()
+	{
+		_stories = await _mongo.Get<Story>(_ => _.ProjectId == ProjectId && _.State < State.Done);
+	}
+
+}

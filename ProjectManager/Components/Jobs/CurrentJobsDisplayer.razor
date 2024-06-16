@@ -1,0 +1,71 @@
+@using MongoDB.Driver
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Enums
+@using MongoDB.Driver.Linq
+@using ProjectManager.Components.Stories
+@inject IMongoDb _mongo
+
+<MudPaper Class="pa-3">
+	<MudGrid>
+		<MudItem xs="12" sm="6">
+			<MudText Typo="Typo.h3" Align="Align.Center">@_jobsPending</MudText>
+			<MudText Typo="Typo.body2" Align="Align.Center">Zadania zaplanowane</MudText>
+		</MudItem>
+		<MudItem xs="12" sm="6">
+			<MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Secondary">@_jobsPending</MudText>
+			<MudText Typo="Typo.body2" Align="Align.Center">Zadania w trakcie</MudText>
+		</MudItem>
+	</MudGrid>
+	<MudProgressLinear Color="Color.Secondary" Class="my-3" Min="0" Max="(_jobsPending ?? 0) + (_jobsInProgress ?? 0)" Value="_jobsInProgress ?? 0" />
+	<div class="my-3">
+		<MudText Typo="Typo.caption">Najnowsze zadania:</MudText>
+		
+		<MudTable Hover Items="_jobs?.OrderByDescending(_ => _.Added).Take(5)" Elevation="0">
+			<RowTemplate>
+				<MudTd>
+					@context.Added.ToLocalTime().ToString("g")
+				</MudTd>
+				<MudTd>
+					<strong>@context.Name</strong><br/>
+					<i><StoryName StoryId="context.StoryId" /></i>
+				</MudTd>
+				<MudTd>
+					@context.Priority
+				</MudTd>
+				<MudTd>
+					<MudButton Size="Size.Small" Variant="Variant.Filled">
+						Pokaż
+					</MudButton>
+				</MudTd>
+			</RowTemplate>
+			<NoRecordsContent>
+				<MudAlert Severity="Severity.Success" Class="my-3">
+					Brak!
+				</MudAlert>
+			</NoRecordsContent>
+		</MudTable>
+	</div>
+</MudPaper>
+
+@code {
+	[Parameter, EditorRequired]
+	public Guid ProjectId { get; set; }
+
+	List<Job>? _jobs;
+	
+	int? _jobsPending => _jobs?.Count(_ => _.State == State.Pending);
+	int? _jobsInProgress => _jobs?.Count(_ => _.State == State.InProgress);
+
+	protected override async Task OnInitializedAsync()
+	{
+		var storyIds = await _mongo
+			.Query<Story>()
+			.Where(_ => _.ProjectId == ProjectId && _.State < State.Done)
+			.Select(_ => _.Id)
+			.ToListAsync();
+		
+		_jobs = await _mongo.Get<Job>(_ => storyIds.Contains(_.StoryId) && _.State < State.Done);
+	}
+
+}

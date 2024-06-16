@@ -1,6 +1,8 @@
 ﻿@attribute [Route(Routes.Index)]
+@using ProjectManager.Components.Stories
 @using ProjectManager.Models.Dto
 @using Routes = ProjectManager.Models.Statics.Routes
+@using ProjectManager.Components.Jobs
 
 <PageTitle>Home</PageTitle>
 
@@ -27,6 +29,15 @@
 					Edytuj
 				</MudButton>
 			</MudStack>
+			
+			<MudGrid Class="my-3">
+				<MudItem xs="12" lg="6">
+					<CurrentStoriesDisplayer ProjectId="@Context.Project.Id" />
+				</MudItem>
+				<MudItem xs="12" lg="6">
+					<CurrentJobsDisplayer ProjectId="@Context.Project.Id" />
+				</MudItem>
+			</MudGrid>
 		}
 	</div>
 	<MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle" Variant="Variant.Filled" Href="@Routes.Projects.Add">
