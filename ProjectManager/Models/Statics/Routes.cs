@@ -15,8 +15,6 @@ public static class Routes
 	{
 		public const string Index = "/projects";
 		public const string Add = Index + "/add";
-		public const string Edit = Index + "/edit/{ProjectId:guid}";
-
-		public static string GetEdit(Guid projectId) => Index + $"/edit/{projectId}";
+		public const string Edit = Index + "/edit";
 	}
 }
