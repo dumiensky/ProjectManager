@@ -1,0 +1,159 @@
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Components.General
+@using ProjectManager.Models.Dto
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Statics
+@using Microsoft.AspNetCore.Components.Authorization
+@using MongoDB.Driver
+@using ProjectManager.Models.Enums
+@using ProjectManager.Models.Extensions
+@using MongoDB.Driver.Linq
+@attribute [Route(Routes.Stories.Details)]
+@inject IMongoDb _mongo
+@inject NavigationManager _nav
+
+@if (_story is null || Context is null)
+{
+	<MudProgressCircular Indeterminate />
+}
+else
+{
+	<MudText Typo="Typo.h2">
+		@_story.Name
+	</MudText>
+	<MudText Typo="Typo.caption">
+		@Context.Project.Name
+	</MudText>
+	
+	<MudPaper Class="my-3 pa-3">
+		<AuthorizeView Context="authCtx">
+			@if (authCtx.User.GetGuid() == _story.OwnerId)
+			{
+				<MudText Color="Color.Success">Twoja historyjka</MudText>
+				<MudStack Row Class="gap-2" AlignItems="AlignItems.Center">
+					<MudText>Priorytet: </MudText>
+					<PriorityEditor Value="_story.Priority" ValueChanged="SetPriority" />
+					<MudText>Stan: </MudText>
+					<StateEditor Value="_story.State" ValueChanged="SetState" />
+					<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" Href="@Routes.Stories.GetEdit(_story.Id)">
+						Edytuj
+					</MudButton>
+				</MudStack>
+			}
+			else if (_story.OwnerId.HasValue)
+			{
+				<MudText>Historyjka użytkownika <UserName UserId="_story.OwnerId.Value" /></MudText>
+				<MudStack Row Class="gap-2" AlignItems="AlignItems.Center">
+					<MudText>Priorytet: </MudText>
+					<PriorityDisplayer Value="_story.Priority" />
+					<MudText>Stan: </MudText>
+					<StateDisplayer Value="_story.State" />
+				</MudStack>
+			}
+		</AuthorizeView>
+		<MudText Typo="Typo.h6" Class="my-3">@_story.Description</MudText>
+		<MudStack Row Justify="Justify.SpaceBetween">
+			<MudText Typo="Typo.caption">Zadania:</MudText>
+			<MudButton Size="Size.Small" Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle" Href="@Routes.Jobs.Add">
+				Dodaj nowe zadanie
+			</MudButton>
+		</MudStack>
+		<MudTable ServerData="ServerData">
+			<HeaderContent>
+				<MudTh>Data</MudTh>
+				<MudTh>Nazwa</MudTh>
+				<MudTh>Priorytet</MudTh>
+				<MudTh>Stan</MudTh>
+				<MudTh></MudTh>
+			</HeaderContent>
+			<RowTemplate>
+				<MudTd>
+					<MudText>
+						@context.Added
+					</MudText>
+				</MudTd>
+				<MudTd>
+					<MudText>
+						@context.Name
+					</MudText>
+				</MudTd>
+				<MudTd>
+					<MudText>
+						<PriorityDisplayer Value="@context.Priority" />
+					</MudText>
+				</MudTd>
+				<MudTd>
+					<MudText>
+						<StateDisplayer Value="@context.State" />
+					</MudText>
+				</MudTd>
+				<MudTd>
+					<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" Href="@Routes.Jobs.GetDetails(context.Id)">
+						Przejdź
+					</MudButton>
+				</MudTd>
+			</RowTemplate>
+			<NoRecordsContent>
+				<MudAlert Severity="Severity.Info">
+					Brak zadań
+				</MudAlert>
+			</NoRecordsContent>
+			<PagerContent>
+				<MudTablePager />
+			</PagerContent>
+		</MudTable>
+	</MudPaper>
+}
+
+@code {
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
+	
+	[Parameter]
+	public Guid StoryId { get; set; }
+
+	Story? _story;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_story = await _mongo.Get<Story>(StoryId);
+		
+		if (_story is null || Context is null)
+			_nav.NavigateTo(Routes.Stories.Index);
+	}
+
+	async Task SetPriority(Priority e)
+	{
+		_story!.Priority = e;
+		
+		await _mongo.Replace(_story);
+	}
+
+	async Task SetState(State e)
+	{
+		_story!.State = e;
+		
+		await _mongo.Replace(_story);
+	}
+
+	async Task<TableData<Job>> ServerData(TableState e)
+	{
+		var query = _mongo
+			.Query<Job>()
+			.Where(_ => _.StoryId == _story!.Id);
+
+		var totalCount = await query.CountAsync();
+		var page = await query
+			.OrderByDescending(_ => _.Added)
+			.Skip(e.Page * e.PageSize)
+			.Take(e.PageSize)
+			.ToListAsync();
+
+		return new()
+		{
+			Items = page,
+			TotalItems = totalCount
+		};
+	}
+
+}

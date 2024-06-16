@@ -3,13 +3,13 @@
 @switch (Value)
 {
 	case State.Pending:
-		<MudText Color="Color.Default">Oczekuje</MudText>
+		<MudText Color="Color.Default">@GetDisplayName(State.Pending)</MudText>
 		break;
 	case State.InProgress:
-		<MudText Color="Color.Info">W trakcie</MudText>
+		<MudText Color="Color.Info">@GetDisplayName(State.InProgress)</MudText>
 		break;
 	case State.Done:
-		<MudText Color="Color.Success">Zrobione</MudText>
+		<MudText Color="Color.Success">@GetDisplayName(State.Done)</MudText>
 		break;
 	default:
 		<MudText>Nieznany stan!</MudText>
@@ -19,4 +19,12 @@
 @code {
 	[Parameter, EditorRequired]
 	public State Value { get; set; }
+
+	public static string? GetDisplayName(State state) => state switch
+	{
+		State.Pending => "Oczekuje",
+		State.InProgress => "W trakcie",
+		State.Done => "Zrobione",
+		_ => null
+	};
 }

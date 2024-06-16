@@ -29,4 +29,15 @@ public static class Routes
 		public static string GetDetails(Guid storyId) => $"{Index}/details/{storyId}";
 		public static string GetEdit(Guid storyId) => $"{Index}/edit/{storyId}";
 	}
+
+	public static class Jobs
+	{
+		public const string Index = "/jobs";
+		public const string Add = Index + "/add";
+		public const string Details = Index + "/details/{JobId:guid}";
+		public const string Edit = Index + "/edit/{JobId:guid}";
+
+		public static string GetDetails(Guid jobId) => $"{Index}/details/{jobId}";
+		public static string GetEdit(Guid jobId) => $"{Index}/edit/{jobId}";
+	}
 }

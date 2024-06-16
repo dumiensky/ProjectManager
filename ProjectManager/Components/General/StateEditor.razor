@@ -1,0 +1,27 @@
+@using ProjectManager.Models.Enums
+<MudMenu Dense>
+	<ActivatorContent>
+		<MudButton>
+			<StateDisplayer Value="Value" />
+		</MudButton>
+	</ActivatorContent>
+	<ChildContent>
+		@foreach (var value in Enum.GetValues<State>())
+		{
+			if (value == Value)
+				continue;
+			
+			<MudMenuItem OnClick="() => ValueChanged.InvokeAsync(value)">
+				@StateDisplayer.GetDisplayName(value)
+			</MudMenuItem>
+		}
+	</ChildContent>
+</MudMenu>
+
+@code {
+	[Parameter]
+	public State Value { get; set; }
+	
+	[Parameter]
+	public EventCallback<State> ValueChanged { get; set; }
+}
