@@ -2,6 +2,7 @@
 @using ProjectManager.Models.Entities
 @using ProjectManager.Models.Enums
 @using ProjectManager.Models.Statics
+@using ProjectManager.Components.General
 @inject IMongoDb _mongo
 
 <MudPaper Class="pa-3">
@@ -11,7 +12,7 @@
 			<MudText Typo="Typo.body2" Align="Align.Center">Historyjki zaplanowane</MudText>
 		</MudItem>
 		<MudItem xs="12" sm="6">
-			<MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Info">@_storiesPending</MudText>
+			<MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Info">@_storiesInProgress</MudText>
 			<MudText Typo="Typo.body2" Align="Align.Center">Historyjki w trakcie</MudText>
 		</MudItem>
 	</MudGrid>
@@ -28,7 +29,7 @@
 					@context.Name
 				</MudTd>
 				<MudTd>
-					@context.Priority
+					<PriorityDisplayer Value="context.Priority" />
 				</MudTd>
 				<MudTd>
 					<MudButton Size="Size.Small" Variant="Variant.Filled" Href="@Routes.Stories.GetDetails(context.Id)">

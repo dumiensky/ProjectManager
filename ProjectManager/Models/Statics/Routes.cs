@@ -33,10 +33,11 @@ public static class Routes
 	public static class Jobs
 	{
 		public const string Index = "/jobs";
-		public const string Add = Index + "/add";
+		public const string Add = Index + "/add/{StoryId:guid}";
 		public const string Details = Index + "/details/{JobId:guid}";
 		public const string Edit = Index + "/edit/{JobId:guid}";
 
+		public static string GetAdd(Guid storyId) => $"{Index}/add/{storyId}";
 		public static string GetDetails(Guid jobId) => $"{Index}/details/{jobId}";
 		public static string GetEdit(Guid jobId) => $"{Index}/edit/{jobId}";
 	}

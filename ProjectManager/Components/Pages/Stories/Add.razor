@@ -59,7 +59,7 @@
 			return;
 
 		await _mongo.Add(_story);
-		_snack.Add("Stworzono nową historyjkę projekt", Severity.Success);
+		_snack.Add("Stworzono nową historyjkę", Severity.Success);
 		
 		_nav.NavigateTo(Routes.Stories.GetDetails(_story.Id));
 	}

@@ -1,8 +1,129 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Dto
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Extensions
 @using ProjectManager.Models.Statics
 @attribute [Route(Routes.Jobs.Edit)]
+@inject IMongoDb _mongo
+@inject ISnackbar _snack
+@inject NavigationManager _nav
 
-<h3>Edit</h3>
+@if (Context is null || _story is null || _job is null)
+{
+	<MudProgressCircular Indeterminate />
+}
+else
+{
+	<MudText Typo="Typo.h2">
+		Edycja zadania
+	</MudText>
+	<MudText Typo="Typo.caption">
+		@_story.Name
+	</MudText>
+
+	<MudPaper Class="my-3 pa-3">
+		<MudTextField @bind-Value="_job.Name" Label="Nazwa" Immediate />
+		<MudTextField @bind-Value="_job.Description" Label="Opis" Immediate />
+
+		<MudTimePicker Class="mt-3" Label="Przewidywany czas trwania" @bind-Time="_estimatedLength" />
+
+		<MudButton
+			Variant="Variant.Filled"
+			Color="Color.Success"
+			Class="my-3"
+			FullWidth
+			Disabled="string.IsNullOrEmpty(_job.Name) || string.IsNullOrEmpty(_job.Description)"
+			OnClick="Submit">
+			Edytuj
+		</MudButton>
+
+		<MudButton
+			Variant="Variant.Text"
+			Color="Color.Error"
+			Class="my-3"
+			OnClick="Delete">
+			Usuń to zadanie
+		</MudButton>
+	</MudPaper>
+}
 
 @code {
+
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
+
+	[CascadingParameter]
+	public required Task<AuthenticationState> AuthState { get; set; }
+
+	[Parameter]
+	public Guid JobId { get; set; }
+
+	Job? _job;
+	Story? _story;
 	
+	TimeSpan? _estimatedLength
+	{
+		get => _job?.EstimatedLength;
+		set
+		{
+			if (_job is null)
+				return;
+
+			_job.EstimatedLength = value ?? TimeSpan.Zero;
+		}
+	}
+
+	protected override void OnInitialized()
+	{
+		if (Context is null)
+			_nav.NavigateTo(Routes.Index);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_job = await _mongo.Get<Job>(JobId);
+
+		if (_job is null)
+		{
+			_nav.NavigateTo(Routes.Index);
+			return;
+		}
+
+		_story = await _mongo.Get<Story>(_job.StoryId);
+		if (_story is null)
+		{
+			_nav.NavigateTo(Routes.Index);
+			return;
+		}
+
+		if (_story.OwnerId != (await AuthState).User.GetGuid())
+		{
+			_snack.Add("Nie możesz edytować zadań w nie swojej historyjce", Severity.Error);
+			_nav.NavigateTo(Routes.Stories.GetDetails(_story.Id));
+		}
+	}
+
+	async Task Submit()
+	{
+		if (string.IsNullOrEmpty(_job?.Name) || string.IsNullOrEmpty(_job?.Description))
+			return;
+
+		await _mongo.Replace(_job);
+		_snack.Add("Zaktualizowano zadanie", Severity.Success);
+
+		_nav.NavigateTo(Routes.Jobs.GetDetails(_job.Id));
+	}
+
+	async Task Delete()
+	{
+		if (_job is null)
+			return;
+
+		await _mongo.Delete<Job>(_job.Id);
+		_snack.Add("Usunięto zadanie", Severity.Success);
+
+		_nav.NavigateTo(Routes.Stories.GetDetails(_job.StoryId));
+	}
+
 }

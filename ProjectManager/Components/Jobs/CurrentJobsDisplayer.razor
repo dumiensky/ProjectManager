@@ -3,7 +3,9 @@
 @using ProjectManager.Models.Entities
 @using ProjectManager.Models.Enums
 @using MongoDB.Driver.Linq
+@using ProjectManager.Components.General
 @using ProjectManager.Components.Stories
+@using ProjectManager.Models.Statics
 @inject IMongoDb _mongo
 
 <MudPaper Class="pa-3">
@@ -13,7 +15,7 @@
 			<MudText Typo="Typo.body2" Align="Align.Center">Zadania zaplanowane</MudText>
 		</MudItem>
 		<MudItem xs="12" sm="6">
-			<MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Secondary">@_jobsPending</MudText>
+			<MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Secondary">@_jobsInProgress</MudText>
 			<MudText Typo="Typo.body2" Align="Align.Center">Zadania w trakcie</MudText>
 		</MudItem>
 	</MudGrid>
@@ -31,10 +33,10 @@
 					<i><StoryName StoryId="context.StoryId" /></i>
 				</MudTd>
 				<MudTd>
-					@context.Priority
+					<PriorityDisplayer Value="context.Priority" />
 				</MudTd>
 				<MudTd>
-					<MudButton Size="Size.Small" Variant="Variant.Filled">
+					<MudButton Size="Size.Small" Variant="Variant.Filled" Href="@Routes.Jobs.GetDetails(context.Id)">
 						Pokaż
 					</MudButton>
 				</MudTd>

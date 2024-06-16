@@ -1,8 +1,94 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Components.General
+@using ProjectManager.Models.Dto
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Extensions
 @using ProjectManager.Models.Statics
 @attribute [Route(Routes.Jobs.Add)]
+@inject IMongoDb _mongo
+@inject ISnackbar _snack
+@inject NavigationManager _nav
 
-<h3>Add</h3>
+<MudText Typo="Typo.h2">
+	Tworzenie nowego zadania
+</MudText>
+
+@if (_story is not null)
+{
+	<MudText Typo="Typo.caption">
+		do historyjki @_story.Name
+	</MudText>
+	
+	<MudPaper Class="my-3 pa-3">
+		<MudTextField @bind-Value="_job.Name" Label="Nazwa" Immediate />
+		<MudTextField @bind-Value="_job.Description" Label="Opis" Immediate />
+	
+		<MudText Class="mt-3">Priorytet:</MudText>
+		<PriorityEditor @bind-Value="_job.Priority" />
+
+		<MudTimePicker Class="mt-3" Label="Przewidywany czas trwania" @bind-Time="_estimatedLength" />
+		
+		@* todo: user selector *@
+	
+		<MudButton 
+			Variant="Variant.Filled" 
+			Color="Color.Success"
+			Class="my-3"
+			FullWidth 
+			Disabled="string.IsNullOrEmpty(_job.Name) || string.IsNullOrEmpty(_job.Description)"
+			OnClick="Submit">
+			Stwórz
+		</MudButton>
+	</MudPaper>
+}
 
 @code {
+	[CascadingParameter]
+	public required Task<AuthenticationState> AuthState { get; set; }
 	
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
+	
+	[Parameter]
+	public Guid StoryId { get; set; }
+
+	Story? _story;
+	readonly Job _job = new();
+
+	TimeSpan? _estimatedLength
+	{
+		get => _job.EstimatedLength;
+		set => _job.EstimatedLength = value ?? TimeSpan.Zero;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_story = await _mongo.Get<Story>(StoryId);
+		if (Context is null || _story is null)
+		{
+			_nav.NavigateTo(Routes.Stories.GetDetails(StoryId));
+			return;
+		}
+
+		_job.StoryId = _story.Id;
+
+		if (_story.OwnerId != (await AuthState).User.GetGuid())
+		{
+			_snack.Add("Nie możesz dodawać zadań w nie swojej historyjce", Severity.Error);
+			_nav.NavigateTo(Routes.Stories.GetDetails(StoryId));
+		}
+	}
+
+	async Task Submit()
+	{
+		if (string.IsNullOrEmpty(_job.Name) || string.IsNullOrEmpty(_job.Description))
+			return;
+
+		await _mongo.Add(_job);
+		_snack.Add("Stworzono nowe zadanie", Severity.Success);
+		
+		_nav.NavigateTo(Routes.Jobs.GetDetails(_job.Id));
+	}
+
 }

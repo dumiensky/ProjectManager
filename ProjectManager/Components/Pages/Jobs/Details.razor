@@ -1,8 +1,130 @@
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Models.Dto
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Enums
 @using ProjectManager.Models.Statics
+@using Microsoft.AspNetCore.Components.Authorization
+@using ProjectManager.Components.General
+@using ProjectManager.Models.Extensions
 @attribute [Route(Routes.Jobs.Details)]
+@inject IMongoDb _mongo
+@inject NavigationManager _nav
 
-<h3>Details</h3>
+@if (_story is null || _job is null || Context is null)
+{
+	<MudProgressCircular Indeterminate />
+}
+else
+{
+	<MudText Typo="Typo.h2">
+		@_job.Name
+	</MudText>
+	<MudText Typo="Typo.caption">
+		@_story.Name
+	</MudText>
+
+	<MudPaper Class="my-3 pa-3">
+		<AuthorizeView Context="authCtx">
+			@if (authCtx.User.GetGuid() == _story.OwnerId)
+			{
+				<MudText Color="Color.Success">Twoje zadanie</MudText>
+				<MudStack Row Class="gap-2" AlignItems="AlignItems.Center">
+					<MudText>Priorytet: </MudText>
+					<PriorityEditor Value="_job.Priority" ValueChanged="SetPriority" />
+					<MudText>Stan: </MudText>
+					<StateDisplayer Value="_job.State" />
+					@switch (_job.State)
+					{
+						case State.Pending:
+							<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" OnClick="() => SetState(State.InProgress)">
+								Rozpocznij
+							</MudButton>
+							break;
+						case State.InProgress:
+							<MudText>Rozpoczęto: @_job.StartTimestamp.ToString("g")</MudText>
+							<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" OnClick="() => SetState(State.Done)">
+								Zakończ
+							</MudButton>
+							break;
+						case State.Done:
+							<MudText>Zakończono: @_job.EndTimestamp.ToString("g")</MudText>
+							break;
+					}
+					<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" Href="@Routes.Jobs.GetEdit(_job.Id)">
+						Edytuj
+					</MudButton>
+				</MudStack>
+			}
+			else if (_story.OwnerId.HasValue)
+			{
+				<MudText>Zadanie zarządzane przez użytkownika <UserName UserId="_story.OwnerId.Value" /></MudText>
+				<MudStack Row Class="gap-2" AlignItems="AlignItems.Center">
+					<MudText>Priorytet: </MudText>
+					<PriorityDisplayer Value="_job.Priority" />
+					<MudText>Stan: </MudText>
+					<StateDisplayer Value="_job.State" />
+				</MudStack>
+			}
+		</AuthorizeView>
+		<MudText Typo="Typo.h6" Class="my-3">
+			<i>Przewidywany czas trwania: @_job.EstimatedLength.ToString(@"hh\:mm")</i><br/>
+			@if (_job.State == State.Done)
+			{
+				<i>Rzeczywisty czas trwania: @((_job.EndTimestamp - _job.StartTimestamp).ToString(@"hh\:mm"))</i>
+			}
+		</MudText>
+		<MudText Typo="Typo.h6" Class="my-3">@_job.Description</MudText>
+	</MudPaper>
+}
 
 @code {
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
 	
+	[Parameter]
+	public Guid JobId { get; set; }
+
+	Job? _job;
+	Story? _story;
+
+	protected override async Task OnInitializedAsync()
+	{
+		_job = await _mongo.Get<Job>(JobId);
+		if (_job is null)
+		{
+			_nav.NavigateTo(Routes.Stories.Index);
+			return;
+		}
+		
+		_story = await _mongo.Get<Story>(_job.StoryId);
+
+		if (_story is null || Context is null)
+		{
+			_nav.NavigateTo(Routes.Stories.Index);
+		}
+	}
+
+	async Task SetPriority(Priority e)
+	{
+		_job!.Priority = e;
+		
+		await _mongo.Replace(_job);
+	}
+
+	async Task SetState(State e)
+	{
+		_job!.State = e;
+
+		switch (e)
+		{
+			case State.InProgress:
+				_job.StartTimestamp = DateTimeOffset.Now;
+				break;
+			case State.Done:
+				_job.EndTimestamp = DateTimeOffset.Now;
+				break;
+		}
+		
+		await _mongo.Replace(_job);
+	}
 }
