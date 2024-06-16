@@ -1,0 +1,67 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using MongoDB.Wrapper.Abstractions
+@using ProjectManager.Components.General
+@using ProjectManager.Models.Dto
+@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Extensions
+@using ProjectManager.Models.Statics
+@attribute [Route(Routes.Stories.Add)]
+@inject IMongoDb _mongo
+@inject ISnackbar _snack
+@inject NavigationManager _nav
+
+<MudText Typo="Typo.h2">
+	Tworzenie nowej historyjki
+</MudText>
+
+<MudPaper Class="my-3 pa-3">
+	<MudTextField @bind-Value="_story.Name" Label="Nazwa" Immediate />
+	<MudTextField @bind-Value="_story.Description" Label="Opis" Immediate />
+	
+	<MudText Class="mt-3">Priorytet:</MudText>
+	<PriorityEditor @bind-Value="_story.Priority" />
+	
+	<MudButton 
+		Variant="Variant.Filled" 
+		Color="Color.Success"
+		Class="my-3"
+		FullWidth 
+		Disabled="string.IsNullOrEmpty(_story.Name) || string.IsNullOrEmpty(_story.Description)"
+		OnClick="Submit">
+		Stwórz
+	</MudButton>
+</MudPaper>
+
+@code {
+	[CascadingParameter]
+	public required Task<AuthenticationState> AuthState { get; set; }
+	
+	[CascadingParameter]
+	public ProjectContext? Context { get; set; }
+	
+	readonly Story _story = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Context is null)
+		{
+			_nav.NavigateTo(Routes.Index);
+			return;
+		}
+
+		_story.ProjectId = Context.Project.Id;
+		_story.OwnerId = (await AuthState).User.GetGuid();
+	}
+
+	async Task Submit()
+	{
+		if (string.IsNullOrEmpty(_story.Name) || string.IsNullOrEmpty(_story.Description))
+			return;
+
+		await _mongo.Add(_story);
+		_snack.Add("Stworzono nową historyjkę projekt", Severity.Success);
+		
+		_nav.NavigateTo(Routes.Stories.GetDetails(_story.Id));
+	}
+
+}

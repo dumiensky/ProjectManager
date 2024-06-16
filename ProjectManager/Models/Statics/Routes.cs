@@ -23,6 +23,10 @@ public static class Routes
 	{
 		public const string Index = "/stories";
 		public const string Add = Index + "/add";
+		public const string Details = Index + "/details/{StoryId:guid}";
 		public const string Edit = Index + "/edit/{StoryId:guid}";
+
+		public static string GetDetails(Guid storyId) => $"{Index}/details/{storyId}";
+		public static string GetEdit(Guid storyId) => $"{Index}/edit/{storyId}";
 	}
 }

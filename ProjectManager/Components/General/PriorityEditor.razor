@@ -1,0 +1,27 @@
+@using ProjectManager.Models.Enums
+<MudMenu Dense>
+	<ActivatorContent>
+		<MudButton>
+			<PriorityDisplayer Value="Value" />
+		</MudButton>
+	</ActivatorContent>
+	<ChildContent>
+		@foreach (var value in Enum.GetValues<Priority>())
+		{
+			if (value == Value)
+				continue;
+			
+			<MudMenuItem OnClick="() => ValueChanged.InvokeAsync(value)">
+				@PriorityDisplayer.GetDisplayName(value)
+			</MudMenuItem>
+		}
+	</ChildContent>
+</MudMenu>
+
+@code {
+	[Parameter]
+	public Priority Value { get; set; }
+	
+	[Parameter]
+	public EventCallback<Priority> ValueChanged { get; set; }
+}

@@ -3,13 +3,13 @@
 @switch (Value)
 {
 	case Priority.Low:
-		<MudText Color="Color.Info">Niski</MudText>
+		<MudText Color="Color.Info">@GetDisplayName(Priority.Low)</MudText>
 		break;
 	case Priority.Medium:
-		<MudText Color="Color.Warning">Średni</MudText>
+		<MudText Color="Color.Warning">@GetDisplayName(Priority.Medium)</MudText>
 		break;
 	case Priority.High:
-		<MudText Color="Color.Info">Wysoki</MudText>
+		<MudText Color="Color.Info">@GetDisplayName(Priority.High)</MudText>
 		break;
 	default:
 		<MudText>Nieznany priorytet!</MudText>
@@ -19,4 +19,13 @@
 @code {
 	[Parameter, EditorRequired]
 	public Priority Value { get; set; }
+
+	public static string? GetDisplayName(Priority priority) => priority switch
+	{
+		Priority.Low => "Niski",
+		Priority.Medium => "Średni",
+		Priority.High => "Wysoki",
+		_ => null
+	};
+
 }

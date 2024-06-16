@@ -1,6 +1,7 @@
 @using MongoDB.Wrapper.Abstractions
 @using ProjectManager.Models.Entities
 @using ProjectManager.Models.Enums
+@using ProjectManager.Models.Statics
 @inject IMongoDb _mongo
 
 <MudPaper Class="pa-3">
@@ -30,7 +31,7 @@
 					@context.Priority
 				</MudTd>
 				<MudTd>
-					<MudButton Size="Size.Small" Variant="Variant.Filled">
+					<MudButton Size="Size.Small" Variant="Variant.Filled" Href="@Routes.Stories.GetDetails(context.Id)">
 						Pokaż
 					</MudButton>
 				</MudTd>
@@ -43,10 +44,10 @@
 		</MudTable>
 		
 		<MudStack Row>
-			<MudButton FullWidth Color="Color.Info">
+			<MudButton FullWidth Color="Color.Info" Href="@Routes.Stories.Index">
 				Zobacz wszystkie historyjki
 			</MudButton>
-			<MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle">
+			<MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddCircle" Href="@Routes.Stories.Add">
 				Stwórz
 			</MudButton>
 		</MudStack>

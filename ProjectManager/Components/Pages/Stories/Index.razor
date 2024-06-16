@@ -35,22 +35,22 @@
 		</HeaderContent>
 		<RowTemplate>
 			<MudTd>
-				@context.Name
+				<MudText>@context.Name</MudText>
 			</MudTd>
 			<MudTd>
-				<PriorityDisplayer Value="@context.Priority" />
+				<MudText><PriorityDisplayer Value="@context.Priority" /></MudText>
 			</MudTd>
 			<MudTd>
-				<StateDisplayer Value="@context.State" />
+				<MudText><StateDisplayer Value="@context.State" /></MudText>
 			</MudTd>
 			<MudTd>
 				@if (context.OwnerId.HasValue)
 				{
-					<UserName UserId="@context.OwnerId.Value" />
+					<MudText><UserName UserId="@context.OwnerId.Value" /></MudText>
 				}
 			</MudTd>
 			<MudTd>
-				<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+				<MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" Href="@Routes.Stories.GetDetails(context.Id)">
 					Przejdź
 				</MudButton>
 			</MudTd>
