@@ -26,7 +26,7 @@
 			<MudToggleIconButton Toggled="_isDarkMode" ToggledChanged="SetIsDarkMode" Icon="@Icons.Material.Filled.DarkMode" ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="Color.Warning" />
 		</MudAppBar>
 		<MudDrawer @bind-Open="@_drawerOpen">
-			<NavMenu />
+			<NavMenu Projects="_projects" />
 		</MudDrawer>
 	</AuthorizeView>
 	<MudMainContent>

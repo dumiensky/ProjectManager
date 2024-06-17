@@ -50,13 +50,21 @@
 		ValueChanged.InvokeAsync(user?.Id);
 	}
 	
-	Task<IEnumerable<User>> Search(string e)
+	async Task<IEnumerable<User>> Search(string e)
 	{
 		if (string.IsNullOrWhiteSpace(e))
-			return Task.FromResult(Enumerable.Empty<User>());
+			return Enumerable.Empty<User>();
 
-		return Task.FromResult<IEnumerable<User>>(
-			_userManager.Users.Where(_ => _.NormalizedUserName!.Contains(e.ToUpper())).ToList());
+		var users = _userManager.Users.Where(_ => _.NormalizedUserName!.Contains(e.ToUpper())).ToList();
+		foreach (var user in users.ToList())
+		{
+			if (await _userManager.IsInRoleAsync(user, Roles.Admin))
+			{
+				users.Remove(user);
+			}
+		}
+
+		return users;
 	}
 
 }

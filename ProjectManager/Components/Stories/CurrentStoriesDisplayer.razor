@@ -64,7 +64,7 @@
 	int? _storiesPending => _stories?.Count(_ => _.State == State.Pending);
 	int? _storiesInProgress => _stories?.Count(_ => _.State == State.InProgress);
 
-	protected override async Task OnInitializedAsync()
+	protected override async Task OnParametersSetAsync()
 	{
 		_stories = await _mongo.Get<Story>(_ => _.ProjectId == ProjectId && _.State < State.Done);
 	}

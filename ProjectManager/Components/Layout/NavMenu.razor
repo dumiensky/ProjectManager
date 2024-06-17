@@ -1,11 +1,38 @@
-﻿<MudNavMenu>
-	<MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-	<MudNavLink Href="/servers" Match="NavLinkMatch.Prefix">Servers</MudNavLink>
-	<MudNavGroup Title="Settings" Expanded="true">
-		<MudNavLink Href="/users"  Match="NavLinkMatch.Prefix">Users</MudNavLink>
-		<MudNavLink Href="/security"  Match="NavLinkMatch.Prefix">Security</MudNavLink>
-	</MudNavGroup>
-	<MudNavLink Href="/about"  Match="NavLinkMatch.Prefix">About</MudNavLink>
+﻿@using ProjectManager.Models.Entities
+@using ProjectManager.Models.Statics
+@using ProjectManager.Services.Interfaces
+
+@inject IProjectContextHooks _projectContextHooks
+@inject NavigationManager _nav
+
+<MudNavMenu>
+	<MudNavLink Href="@Routes.Index" Match="NavLinkMatch.All">Strona główna</MudNavLink>
+	@if (Projects is not null)
+	{
+		<MudNavLink Href="@Routes.Stories.Index" Match="NavLinkMatch.Prefix">Historyjki</MudNavLink>
+		@if (Projects.Count > 1)
+		{
+			<MudNavGroup Title="Wybierz projekt">
+				@foreach (var project in Projects.OrderBy(_ => _.Name))
+				{
+					<MudNavLink OnClick="() => SetProject(project)">
+						@project.Name
+					</MudNavLink>
+				}
+			</MudNavGroup>
+		}
+	}
 </MudNavMenu>
 
-@* todo: implement menu *@
+@code{
+
+	[Parameter, EditorRequired]
+	public List<Project>? Projects { get; set; }
+
+	void SetProject(Project project)
+	{
+		_projectContextHooks.SetCurrentProject(project.Id);
+		_nav.NavigateTo(Routes.Index);
+	}
+
+}

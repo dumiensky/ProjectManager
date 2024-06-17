@@ -59,7 +59,7 @@
 	int? _jobsPending => _jobs?.Count(_ => _.State == State.Pending);
 	int? _jobsInProgress => _jobs?.Count(_ => _.State == State.InProgress);
 
-	protected override async Task OnInitializedAsync()
+	protected override async Task OnParametersSetAsync()
 	{
 		var storyIds = await _mongo
 			.Query<Story>()
