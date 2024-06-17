@@ -1,0 +1,62 @@
+@using Microsoft.AspNetCore.Identity
+@using MongoDB.Driver.Linq
+@using ProjectManager.Models.Auth
+@using ProjectManager.Models.Statics
+
+@inject UserManager<User> _userManager
+
+<MudAutocomplete
+	T="User"
+	Label="Przypisany użytkownik"
+	Value="_currentUser" 
+	ValueChanged="SetUser"
+	SearchFunc="Search" 
+	ToStringFunc="user => user?.UserName ?? string.Empty"
+	CoerceText="true"
+	CoerceValue="false"
+	ResetValueOnEmptyText="true"
+	Clearable="true"
+	Disabled="@Disabled"
+	HelperTextOnFocus="true"
+	HelperText="Zacznij wpisywać nazwę..."/>
+
+@code {
+	[Parameter]
+	public Guid? Value { get; set; }
+	
+	[Parameter]
+	public EventCallback<Guid?> ValueChanged { get; set; }
+	
+	[Parameter]
+	public bool Disabled { get; set; }
+
+	User? _currentUser;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if (Value.HasValue)
+		{
+			_currentUser = await _userManager.FindByIdAsync(Value.Value.ToString());
+		}
+		else
+		{
+			_currentUser = null;
+		}
+	}
+
+	void SetUser(User? user)
+	{
+		_currentUser = user;
+		ValueChanged.InvokeAsync(user?.Id);
+	}
+	
+	Task<IEnumerable<User>> Search(string e)
+	{
+		if (string.IsNullOrWhiteSpace(e))
+			return Task.FromResult(Enumerable.Empty<User>());
+
+		return Task.FromResult<IEnumerable<User>>(
+			_userManager.Users.Where(_ => _.NormalizedUserName!.Contains(e.ToUpper())).ToList());
+	}
+
+}

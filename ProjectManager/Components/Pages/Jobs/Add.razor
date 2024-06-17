@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using MongoDB.Wrapper.Abstractions
 @using ProjectManager.Components.General
+@using ProjectManager.Components.Jobs
 @using ProjectManager.Models.Dto
 @using ProjectManager.Models.Entities
 @using ProjectManager.Models.Extensions
@@ -29,7 +30,7 @@
 
 		<MudTimePicker Class="mt-3" Label="Przewidywany czas trwania" @bind-Time="_estimatedLength" />
 		
-		@* todo: user selector *@
+		<JobUserEditor @bind-Value="_job.UserId" />
 	
 		<MudButton 
 			Variant="Variant.Filled" 
